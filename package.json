@@ -1,0 +1,21 @@
+{
+  "name": "tiny-search-engine",
+  "version": "1.0.0",
+  "description": "Tiny search engine",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc *.ts --outDir build",
+    "build:watch": "tsc *.ts --watch --outDir build",
+    "start": "node build/index.js"
+  },
+  "keywords": [],
+  "author": "Me",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.3.1",
+    "csv-parse": "^5.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.3"
+  }
+}
