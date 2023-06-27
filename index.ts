@@ -1,9 +1,15 @@
 import { createReadStream } from "node:fs";
 import { Parser, parse } from "csv-parse";
+import { argv, exit } from "node:process";
 
 const INDEX: Map<number, string> = new Map(); // TODO: Persists at disk
 const INVERTED_INDEX: Map<string, number[]> = new Map(); // TODO: Persists at disk
-const DATASET_PATH = `./dataset/small-dataset.csv`; // TODO: Get dataset path from process.argv
+const DATASET_PATH = `./dataset/large-dataset.csv`; // TODO: Get dataset path from process.argv
+
+interface SearchResult {
+  id: number,
+  text: string
+}
 
 function normalize(value: string): string[] {
   const terms: string[] = value.split(" ");
@@ -18,7 +24,7 @@ function normalize(value: string): string[] {
   return normalizedTerms;
 }
 
-function search(text: string): number[] {
+function search(text: string): SearchResult[] {
   let matchs: number[] = [];
   for (const token of normalize(text)) {
     if (INVERTED_INDEX.has(token)) {
@@ -31,11 +37,7 @@ function search(text: string): number[] {
     }
   }
 
-  console.log("[Search] Results: ");
-  for (const id of matchs) {
-    console.log(`${id} - ${INDEX.get(id)}`);
-  }
-  return matchs;
+  return matchs.map(id => ({ id, text: INDEX.get(id) || "" }));;
 }
 
 async function buildIndex(): Promise<void> {
@@ -68,6 +70,18 @@ async function buildIndex(): Promise<void> {
 }
 
 (async () => {
+  if (argv.length <= 2) {
+    console.log("ERROR: Missing search params\n");
+
+    console.log("Usage: ");
+    console.log('npm start <query>');
+    console.log('<query>    The query filter.');
+
+    exit(69);
+  }
+
+  const query = argv[2];
+
   console.log("[Index] Building...");
   console.time("[Index] Took");
   await buildIndex(); // TODO: Load index from disk instead of build at runtime
@@ -77,7 +91,10 @@ async function buildIndex(): Promise<void> {
   console.log("[Search] Searching...");
   console.time("[Search] Took");
   
-  search("generation is a process"); // TODO: Get query from process.argv
+  const results: SearchResult[] = search(query);
+
+  console.log("[Search] Results: ");
+  console.log(results);
 
   console.timeEnd("[Search] Took");
 })();
